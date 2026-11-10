@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dissolving Notepad - Water Typing Challenge</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Aesthetic handwriting & serif fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Cinzel:wght@600;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Ambient Deep Water & Underwater Rays Background -->
+  <div class="water-background">
+    <div class="light-ray ray1"></div>
+    <div class="light-ray ray2"></div>
+    <div class="light-ray ray3"></div>
+    <canvas id="bubbleCanvas"></canvas>
+  </div>
+
+  <div class="game-container">
+    <!-- Top Header Bar -->
+    <header class="game-header">
+      <div class="brand">
+        <span class="brand-sub">AN URGENT MEMORANDUM</span>
+        <h1 class="game-title">DISSOLVING NOTEPAD</h1>
+      </div>
+
+      <div class="stats-panel">
+        <div class="stat-pill">
+          <span class="stat-label">WORDS SAVED</span>
+          <span class="stat-value" id="scoreDisplay">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">STREAK</span>
+          <span class="stat-value" id="streakDisplay">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">STAGE</span>
+          <span class="stat-value" id="stageDisplay">1</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">WATER LEVEL</span>
+          <span class="stat-value danger-glow" id="submergeDisplay">0%</span>
+        </div>
+
+        <button id="soundToggle" class="icon-toggle" title="Toggle Sound">🔊 Audio: ON</button>
+      </div>
+    </header>
+
+    <!-- Main Game Arena -->
+    <main class="aquarium-stage">
+      <!-- Water Surface Wave Effect -->
+      <div class="water-surface-line" id="waterSurfaceLine">
+        <div class="surface-wave wave-1"></div>
+        <div class="surface-wave wave-2"></div>
+      </div>
+
+      <!-- Water Tank Overlay that rises up -->
+      <div class="water-layer" id="waterRiseLayer">
+        <div class="murky-fluid"></div>
+        <canvas id="splashCanvas"></canvas>
+      </div>
+
+      <!-- The Physical Submerging & Dissolving Paper Sheet -->
+      <div class="notepad-wrapper" id="notepadWrapper">
+        <div class="notepad-binder-clip"></div>
+        
+        <article class="paper-sheet" id="paperSheet">
+          <!-- Torn top edge styling & lines -->
+          <div class="sheet-header">
+            <span class="memo-date" id="memoDate">CLASSIFIED NOTE</span>
+            <span class="submersion-badge" id="paperStatusBadge">DRY & CRISP</span>
+          </div>
+
+          <!-- Prompt Word Area -->
+          <div class="target-word-container">
+            <div class="prompt-hint">TRANSCRIBE BEFORE INK MELTS:</div>
+            <div class="target-word-box" id="targetWordBox">
+              <span id="targetWord">PREPARE</span>
+            </div>
+            <div class="word-translation-hint" id="wordHint">Secret Message</div>
+          </div>
+
+          <!-- Player Input Line (Ruled fountain-pen style line) -->
+          <div class="player-input-container">
+            <div class="input-line-wrapper">
+              <input 
+                type="text" 
+                id="wordInput" 
+                class="notepad-input" 
+                placeholder="type here..." 
+                autocomplete="off" 
+                autocorrect="off" 
+                autocapitalize="off" 
+                spellcheck="false"
+                disabled
+              />
+              <div class="pen-nib-indicator"></div>
+            </div>
+            <div class="input-feedback" id="inputFeedback">Press Start to begin transcription</div>
+          </div>
+
+          <!-- Dissolving Fiber & Ink Dissolve Overlay -->
+          <canvas id="dissolveCanvas" class="dissolve-overlay"></canvas>
+
+          <!-- Waterline boundary on the paper itself -->
+          <div class="paper-submerge-fill" id="paperSubmergeFill">
+            <div class="wet-foam"></div>
+          </div>
+        </article>
+      </div>
+    </main>
+
+    <!-- Bottom Status / Timer Bar -->
+    <footer class="game-footer">
+      <div class="timer-bar-container">
+        <div class="timer-label-row">
+          <span>DISSOLUTION PROGRESSION</span>
+          <span id="timeLeftSeconds">6.0s</span>
+        </div>
+        <div class="timer-track">
+          <div class="timer-fill" id="timerFill"></div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal Overlays (Start / Game Over) -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <!-- Start Screen Modal -->
+    <div class="modal-card" id="startModal">
+      <div class="modal-icon">💧📝</div>
+      <h2>THE DISSOLVING NOTEPAD</h2>
+      <p class="modal-desc">
+        Your classified notepad has dropped into a submerging water tank! The moisture causes the paper to decompose and dissolve quickly.
+      </p>
+      <div class="modal-rules">
+        <div class="rule-item">
+          <strong>1. Type Rapidly:</strong> Type the prompt word exactly before the water completely dissolves the paper fibers.
+        </div>
+        <div class="rule-item">
+          <strong>2. Water Rises:</strong> With every missed second, ink blurs and fibers rip apart.
+        </div>
+        <div class="rule-item">
+          <strong>3. Build Streaks:</strong> High-speed transcriptions grant bonus time and dry the paper!
+        </div>
+      </div>
+
+      <div class="difficulty-select">
+        <label>Difficulty:</label>
+        <button class="diff-btn active" data-diff="normal">NORMAL</button>
+        <button class="diff-btn" data-diff="panic">PANIC SPEED</button>
+        <button class="diff-btn" data-diff="scholar">SCHOLAR (LONG WORDS)</button>
+      </div>
+
+      <button id="startBtn" class="primary-btn">DIVE IN & START TYPING</button>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal-card hidden" id="gameOverModal">
+      <div class="modal-icon">🌊🫧</div>
+      <h2 id="gameOverTitle">PAPER FULLY DISSOLVED!</h2>
+      <p class="modal-desc" id="gameOverDesc">
+        The notepad disintegrated into wet pulp. Your secrets are lost to the abyss.
+      </p>
+
+      <div class="game-over-summary">
+        <div class="summary-box">
+          <span class="sub-label">WORDS RESCUED</span>
+          <span class="big-stat" id="finalScore">0</span>
+        </div>
+        <div class="summary-box">
+          <span class="sub-label">MAX STREAK</span>
+          <span class="big-stat" id="finalStreak">0</span>
+        </div>
+        <div class="summary-box">
+          <span class="sub-label">HIGHEST SCORE</span>
+          <span class="big-stat" id="highScoreStat">0</span>
+        </div>
+      </div>
+
+      <button id="restartBtn" class="primary-btn">RESCUE A FRESH NOTEPAD</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

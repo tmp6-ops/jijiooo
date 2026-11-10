@@ -1,0 +1,707 @@
+/* =========================================================
+   DISSOLVING NOTEPAD - STYLESHEET
+   Submerged water physics, dissolving paper, ink dispersion
+   ========================================================= */
+
+:root {
+  --water-deep: #071b26;
+  --water-mid: #0d384d;
+  --water-teal: #14607a;
+  --water-foam: #50e4ff;
+  --paper-base: #f9f6ea;
+  --paper-line: #d8cbb5;
+  --paper-margin: #e88c8c;
+  --ink-primary: #1e2832;
+  --ink-accent: #0f4c81;
+  --accent-gold: #e2b04a;
+  --danger-crimson: #e04747;
+  --timer-gradient: linear-gradient(90deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Courier Prime', monospace;
+  background-color: var(--water-deep);
+  color: #e2e8f0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Water Ambient Background & Underwater Light Rays */
+.water-background {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 20%, #11425b 0%, #061924 75%, #020c12 100%);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.light-ray {
+  position: absolute;
+  top: -20%;
+  width: 140px;
+  height: 140%;
+  background: linear-gradient(180deg, rgba(80, 228, 255, 0.18) 0%, rgba(20, 96, 122, 0.03) 70%, transparent 100%);
+  transform: rotate(-18deg);
+  pointer-events: none;
+  filter: blur(12px);
+  animation: swayRay 12s ease-in-out infinite alternate;
+}
+
+.ray1 { left: 15%; animation-delay: 0s; }
+.ray2 { left: 45%; animation-delay: 4s; width: 200px; }
+.ray3 { left: 75%; animation-delay: 2s; width: 120px; }
+
+@keyframes swayRay {
+  0% { transform: rotate(-22deg) translateX(-20px); opacity: 0.6; }
+  100% { transform: rotate(-14deg) translateX(30px); opacity: 0.95; }
+}
+
+#bubbleCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Container Structure */
+.game-container {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  max-width: 960px;
+  min-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 24px;
+}
+
+/* Header & Stat Badges */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(80, 228, 255, 0.2);
+}
+
+.brand-sub {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--water-foam);
+  display: block;
+}
+
+.game-title {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 0 16px rgba(80, 228, 255, 0.5);
+}
+
+.stats-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-pill {
+  background: rgba(13, 56, 77, 0.5);
+  border: 1px solid rgba(80, 228, 255, 0.25);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #8bbbc9;
+}
+
+.stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.danger-glow {
+  color: #ff7675;
+  text-shadow: 0 0 10px rgba(255, 118, 117, 0.6);
+}
+
+.icon-toggle {
+  background: rgba(80, 228, 255, 0.15);
+  border: 1px solid rgba(80, 228, 255, 0.4);
+  color: #d1f4ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-toggle:hover {
+  background: rgba(80, 228, 255, 0.3);
+}
+
+/* Aquarium Stage / Tank Area */
+.aquarium-stage {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  margin: 12px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px;
+}
+
+/* Realistic Submerging Notepad */
+.notepad-wrapper {
+  position: relative;
+  width: 580px;
+  max-width: 95%;
+  height: 440px;
+  transition: transform 0.3s ease;
+  z-index: 6;
+}
+
+.notepad-binder-clip {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 24px;
+  background: linear-gradient(180deg, #5c6266 0%, #2a2d30 100%);
+  border-radius: 4px;
+  border: 1px solid #787f85;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+}
+
+.notepad-binder-clip::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 20px;
+  right: 20px;
+  height: 3px;
+  background: #a0a6ab;
+  border-radius: 2px;
+}
+
+/* The Paper Sheet with genuine paper texture & ruled lines */
+.paper-sheet {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--paper-base);
+  background-image: 
+    radial-gradient(#eedcb5 15%, transparent 16%),
+    linear-gradient(#f0e9d2 1px, transparent 1px);
+  background-size: 32px 32px, 100% 28px;
+  border-radius: 4px 4px 10px 10px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    inset 0 0 40px rgba(189, 162, 120, 0.25);
+  border: 1px solid #dcd1ba;
+  padding: 30px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  transition: filter 0.2s ease, transform 0.25s ease;
+}
+
+/* Red Margin Line characteristic of classic notepads */
+.paper-sheet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 60px;
+  width: 2px;
+  background: var(--paper-margin);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px dashed #d1c1a5;
+  padding-bottom: 8px;
+  margin-left: 28px;
+}
+
+.memo-date {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #7d6b52;
+  font-weight: 700;
+}
+
+.submersion-badge {
+  font-size: 10px;
+  padding: 4px 8px;
+  background: #e8ded0;
+  color: #5d4b35;
+  border-radius: 4px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+/* Target Word to Type */
+.target-word-container {
+  text-align: center;
+  padding: 15px 0 5px;
+  margin-left: 28px;
+}
+
+.prompt-hint {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #8c7355;
+  margin-bottom: 8px;
+}
+
+.target-word-box {
+  display: inline-block;
+  font-family: 'Caveat', cursive;
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  letter-spacing: 3px;
+  line-height: 1.1;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  min-height: 60px;
+}
+
+/* Character highlight states for typed letters */
+.char-correct {
+  color: #059669;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+
+.char-wrong {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.15);
+  border-radius: 2px;
+}
+
+.char-pending {
+  color: var(--ink-primary);
+  opacity: 0.85;
+}
+
+.word-translation-hint {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: #7c684d;
+  margin-top: 4px;
+}
+
+/* Player Input Ruled Line */
+.player-input-container {
+  margin-left: 28px;
+  margin-top: 10px;
+}
+
+.input-line-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #204051;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 4px 4px 0 0;
+  padding: 6px 12px;
+}
+
+.notepad-input {
+  width: 100%;
+  font-family: 'Courier Prime', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: #123347;
+  background: transparent;
+  border: none;
+  outline: none;
+  letter-spacing: 2px;
+}
+
+.notepad-input::placeholder {
+  color: #b3a286;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.notepad-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pen-nib-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #14607a;
+  box-shadow: 0 0 8px #50e4ff;
+  animation: pulseNib 1.5s infinite alternate;
+}
+
+@keyframes pulseNib {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+.input-feedback {
+  font-size: 11px;
+  color: #6c5a45;
+  margin-top: 6px;
+  min-height: 18px;
+}
+
+/* Canvas Overlays: Dissolve Fibers & Water splashes */
+.dissolve-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 12;
+}
+
+/* Rising water boundary fill inside paper */
+.paper-submerge-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(180deg, rgba(80, 228, 255, 0.3) 0%, rgba(13, 56, 77, 0.65) 100%);
+  pointer-events: none;
+  z-index: 10;
+  transition: height 0.15s ease-out;
+  backdrop-filter: blur(1.5px);
+}
+
+.wet-foam {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: repeating-linear-gradient(90deg, #ffffff, #50e4ff 10px, #ffffff 20px);
+  opacity: 0.7;
+  filter: blur(1px);
+  animation: foamRinse 2s linear infinite;
+}
+
+@keyframes foamRinse {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}
+
+/* Rising Water Tank Overlay */
+.water-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  pointer-events: none;
+  z-index: 8;
+  transition: height 0.15s ease-out;
+  overflow: hidden;
+}
+
+.murky-fluid {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(20, 96, 122, 0.45) 0%, rgba(7, 27, 38, 0.85) 100%);
+  backdrop-filter: blur(1px);
+}
+
+#splashCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.water-surface-line {
+  position: absolute;
+  bottom: 0%;
+  left: 0;
+  width: 100%;
+  height: 14px;
+  pointer-events: none;
+  z-index: 9;
+  transition: bottom 0.15s ease-out;
+}
+
+.surface-wave {
+  position: absolute;
+  width: 200%;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, transparent, rgba(80, 228, 255, 0.5) 25px, transparent 50px);
+  filter: blur(2px);
+}
+
+.wave-1 { animation: waveSlide 4s linear infinite; }
+.wave-2 { animation: waveSlide 6s linear infinite reverse; opacity: 0.6; }
+
+@keyframes waveSlide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Bottom Progress Bar */
+.game-footer {
+  padding-top: 10px;
+}
+
+.timer-bar-container {
+  background: rgba(13, 56, 77, 0.6);
+  border: 1px solid rgba(80, 228, 255, 0.3);
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+.timer-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  color: #9bd7ea;
+}
+
+.timer-track {
+  width: 100%;
+  height: 14px;
+  background: rgba(4, 18, 25, 0.8);
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.timer-fill {
+  width: 100%;
+  height: 100%;
+  background: var(--timer-gradient);
+  border-radius: 7px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  transition: width 0.08s linear;
+}
+
+/* Modals (Start / Game Over) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 13, 19, 0.88);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  transition: opacity 0.3s ease;
+}
+
+.modal-backdrop.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-card {
+  width: 520px;
+  max-width: 90%;
+  background: linear-gradient(180deg, #0e2938 0%, #071720 100%);
+  border: 1px solid rgba(80, 228, 255, 0.4);
+  border-radius: 12px;
+  padding: 32px 30px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(80, 228, 255, 0.15);
+  animation: modalPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-card.hidden {
+  display: none;
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.modal-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.modal-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.modal-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #a4c9d7;
+  margin-bottom: 20px;
+}
+
+.modal-rules {
+  text-align: left;
+  background: rgba(5, 20, 28, 0.6);
+  border: 1px solid rgba(80, 228, 255, 0.15);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: #d1ecf4;
+}
+
+.modal-rules strong {
+  color: #50e4ff;
+}
+
+.difficulty-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.difficulty-select label {
+  font-size: 11px;
+  color: #8bbbc9;
+  letter-spacing: 1px;
+}
+
+.diff-btn {
+  background: rgba(13, 56, 77, 0.8);
+  border: 1px solid rgba(80, 228, 255, 0.3);
+  color: #c0e6f3;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.diff-btn.active, .diff-btn:hover {
+  background: #14607a;
+  border-color: #50e4ff;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(80, 228, 255, 0.4);
+}
+
+.primary-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #14607a 0%, #0d384d 100%);
+  border: 1px solid #50e4ff;
+  color: #ffffff;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(20, 96, 122, 0.5);
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: linear-gradient(135deg, #1b7a9c 0%, #114963 100%);
+  box-shadow: 0 6px 20px rgba(80, 228, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.primary-btn:active {
+  transform: translateY(1px);
+}
+
+/* Game Over Summary Stats */
+.game-over-summary {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.summary-box {
+  flex: 1;
+  background: rgba(5, 20, 28, 0.7);
+  border: 1px solid rgba(80, 228, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-box .sub-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #8cbad0;
+}
+
+.summary-box .big-stat {
+  font-size: 24px;
+  font-weight: 700;
+  color: #50e4ff;
+}
+
+/* Shake / Dissolve Animations on Error or Success */
+@keyframes shakePaper {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px) rotate(-1deg); }
+  40%, 80% { transform: translateX(6px) rotate(1deg); }
+}
+
+.shake {
+  animation: shakePaper 0.3s ease;
+}
+
+@keyframes glowSuccess {
+  0% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.8); }
+  100% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); }
+}
+
+.success-glow {
+  animation: glowSuccess 0.5s ease;
+}
